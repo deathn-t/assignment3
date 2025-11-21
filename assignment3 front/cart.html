@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe Store - Cart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .home-btn {
+            background-color: #6c757d;
+        }
+        
+        .products-btn {
+            background-color: #17a2b8;
+        }
+        
+        .total-price {
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: #28a745;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .cart-items {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .cart-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .item-details {
+            flex-grow: 1;
+        }
+        
+        .remove-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .remove-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .empty-cart-btn {
+            background-color: #ffc107;
+            color: black;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .empty-cart-btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .empty-cart-message {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #dc3545;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Shopping Cart</h1>
+        <div class="nav-buttons">
+            <div class="total-price">Total: $<span id="totalPrice">0.00</span></div>
+            <a href="index.html" class="btn home-btn">Home</a>
+            <a href="products.html" class="btn products-btn">Back to Products</a>
+        </div>
+    </div>
+    
+    <div class="cart-items" id="cartItems">
+        <div class="loading">Loading cart...</div>
+    </div>
+    
+    <div style="padding: 0 2rem; max-width: 800px; margin: 0 auto;">
+        <button class="empty-cart-btn" onclick="emptyCart()">Empty Cart</button>
+    </div>
+
+    <script>
+        // Use your actual Render backend URL
+        const API_BASE_URL = 'https://assignment3-backend-tiqq.onrender.com';
+        
+        async function loadCart() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/cart`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const cartItems = await response.json();
+                
+                displayCartItems(cartItems);
+                calculateTotal(cartItems);
+            } catch (error) {
+                console.error('Error loading cart:', error);
+                document.getElementById('cartItems').innerHTML = 
+                    '<div class="error">Error loading cart. Please check if the backend server is running.</div>';
+            }
+        }
+        
+        function displayCartItems(cartItems) {
+            const cartItemsContainer = document.getElementById('cartItems');
+            
+            if (cartItems.length === 0) {
+                cartItemsContainer.innerHTML = '<div class="empty-cart-message">Your cart is empty</div>';
+                return;
+            }
+            
+            cartItemsContainer.innerHTML = '';
+            
+            cartItems.forEach(item => {
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'cart-item';
+                cartItemElement.innerHTML = `
+                    <div class="item-details">
+                        <h3>${item.productName || 'Product'}</h3>
+                        <p>Quantity: ${item.quantity}</p>
+                        <p>Price: $${item.productPrice || '0.00'}</p>
+                        <p>Subtotal: $${((item.productPrice || 0) * item.quantity).toFixed(2)}</p>
+                    </div>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id})">
+                        Remove
+                    </button>
+                `;
+                cartItemsContainer.appendChild(cartItemElement);
+            });
+        }
+        
+        function calculateTotal(cartItems) {
+            const total = cartItems.reduce((sum, item) => {
+                return sum + ((item.productPrice || 0) * item.quantity);
+            }, 0);
+            
+            document.getElementById('totalPrice').textContent = total.toFixed(2);
+        }
+        
+        async function removeFromCart(cartId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/cart/${cartId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                loadCart(); // Reload cart
+            } catch (error) {
+                console.error('Error removing from cart:', error);
+                alert('Error removing item from cart. Please try again.');
+            }
+        }
+        
+        async function emptyCart() {
+            if (!confirm('Are you sure you want to empty your cart?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/cart/emptycart`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                loadCart(); // Reload cart
+            } catch (error) {
+                console.error('Error emptying cart:', error);
+                alert('Error emptying cart. Please try again.');
+            }
+        }
+        
+        // Load cart when page loads
+        document.addEventListener('DOMContentLoaded', loadCart);
+    </script>
+</body>
+</html>

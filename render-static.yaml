@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: assignment3-frontend
+    env: static
+    buildCommand: echo "No build needed"
+    staticPublishPath: ./frontend
+    envVars:
+      - key: RENDER
+        value: true

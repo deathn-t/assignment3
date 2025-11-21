@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe Store - Products</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .home-btn {
+            background-color: #6c757d;
+        }
+        
+        .cart-btn {
+            background-color: #28a745;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .product-name {
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+        }
+        
+        .product-price {
+            font-size: 1.1rem;
+            color: #007bff;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .add-to-cart {
+            background-color: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .add-to-cart:hover {
+            background-color: #218838;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #dc3545;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Shoe Store - Products</h1>
+        <div class="nav-buttons">
+            <a href="index.html" class="btn home-btn">Home</a>
+            <a href="cart.html" class="btn cart-btn">View Cart</a>
+        </div>
+    </div>
+    
+    <div class="products-grid" id="productsGrid">
+        <div class="loading">Loading products...</div>
+    </div>
+
+    <script>
+        // Use your actual Render backend URL
+        const API_BASE_URL = 'https://assignment3-backend-tiqq.onrender.com';
+        
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/products`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const products = await response.json();
+                
+                const productsGrid = document.getElementById('productsGrid');
+                
+                if (products.length === 0) {
+                    productsGrid.innerHTML = '<div class="loading">No products found</div>';
+                    return;
+                }
+                
+                productsGrid.innerHTML = '';
+                
+                products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+                    productCard.innerHTML = `
+                        <img src="${product.image}" alt="${product.name}" class="product-image" 
+                             onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                        <h3 class="product-name">${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p class="product-price">$${product.price}</p>
+                        <p><strong>SKU:</strong> ${product.sku}</p>
+                        <button class="add-to-cart" onclick="addToCart(${product.id})">
+                            Add to Cart
+                        </button>
+                    `;
+                    productsGrid.appendChild(productCard);
+                });
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsGrid').innerHTML = 
+                    '<div class="error">Error loading products. Please check if the backend server is running.</div>';
+            }
+        }
+        
+        async function addToCart(productId) {
+            try {
+                const cartItem = {
+                    productId: productId,
+                    quantity: 1
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/cart`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(cartItem)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                alert('Product added to cart successfully!');
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                alert('Error adding product to cart. Please try again.');
+            }
+        }
+        
+        // Load products when page loads
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
+</html>

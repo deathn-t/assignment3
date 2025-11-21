@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: assignment3-backend
+    env: docker
+    docker:
+      dockerfile: Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+    plan: free

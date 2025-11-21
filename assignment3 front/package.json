@@ -1,0 +1,8 @@
+{
+  "name": "shoe-store-frontend",
+  "version": "1.0.0",
+  "description": "Static frontend for Shoe Store E-commerce",
+  "scripts": {
+    "build": "echo 'No build process needed for static site'"
+  }
+}
