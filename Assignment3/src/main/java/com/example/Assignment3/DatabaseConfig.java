@@ -17,7 +17,7 @@ public class DatabaseConfig {
     public DataSource dataSource() throws URISyntaxException {
         String databaseUrl = System.getenv("DATABASE_URL");
 
-        // If DATABASE_URL is provided (Render production)
+
         if (databaseUrl != null) {
             URI dbUri = new URI(databaseUrl);
 
@@ -33,14 +33,34 @@ public class DatabaseConfig {
                     .password(password)
                     .build();
         }
-        // Fallback for local development
-        else {
-            System.out.println("Using local PostgreSQL database");
+
+
+        String dbHost = System.getenv("DB_HOST");
+        String dbPort = System.getenv("DB_PORT");
+        String dbName = System.getenv("DB_NAME");
+        String dbUser = System.getenv("DB_USER");
+        String dbPassword = System.getenv("DB_PASSWORD");
+
+        if (dbHost != null && dbUser != null && dbPassword != null) {
+            String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s",
+                    dbHost, dbPort != null ? dbPort : "5432",
+                    dbName != null ? dbName : "ecommerce");
+
+            System.out.println("Using Render PostgreSQL database with individual env vars: " + dbHost);
+
             return DataSourceBuilder.create()
-                    .url("jdbc:postgresql://localhost:5432/ecommerce")
-                    .username("postgres")
-                    .password("password")
+                    .url(jdbcUrl)
+                    .username(dbUser)
+                    .password(dbPassword)
                     .build();
         }
+
+        // Final fallback for local development
+        System.out.println("Using local PostgreSQL database");
+        return DataSourceBuilder.create()
+                .url("jdbc:postgresql://localhost:5432/ecommerce")
+                .username("postgres")
+                .password("password")
+                .build();
     }
 }
