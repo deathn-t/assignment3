@@ -11,11 +11,6 @@ public class WebController {
         return "forward:/products.html";
     }
 
-    @GetMapping("/products")
-    public String productsPage() {
-        return "forward:/products.html";
-    }
-
     @GetMapping("/cart")
     public String cartPage() {
         return "forward:/cart.html";
